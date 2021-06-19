@@ -105,3 +105,6 @@ def extract_results(script_write_path, script_name, summary_name, clump_name, su
     # Extract the chromosome level snps
     file.write("awk '{print $%s,$%s}' %s > SNP.valid\n\n" % (clump_snp, clump_chromosome, clump_name))
     file.write("awk '{print $%s,$%s,$%s}' %s > SNP.values\n" % (summary_snp, summary_effect, summary_p, summary_name))
+
+
+# todo sbatch header for extract_snps
