@@ -1,4 +1,4 @@
-from miscSupports import load_yaml, directory_iterator, validate_path, flip_list, terminal_time
+from miscSupports import load_yaml, directory_iterator, validate_path, flip_list, terminal_time, FileOut
 from csvObject import CsvObject, write_csv
 from bgen_reader import custom_meta_path
 from pysnptools.distreader import Bgen
@@ -10,8 +10,9 @@ import numpy as np
 class CTScores:
     def __init__(self, yaml_file):
 
-        # Load yaml args
+        # Load yaml args and set logger
         self.args = load_yaml(yaml_file)
+        self.logger = FileOut(self.args["write_path"], "logger", "log", True)
 
         # Set parse indexes
         self._chr_index = self.args["chromosome_index"]
@@ -43,7 +44,7 @@ class CTScores:
         # Write the scores out
         self._out = [list(iid) + values for iid, values in zip(self._iid, flip_list(self._out))]
         write_csv(self.args["write_path"], self.args["write_name"], self._headers, self._out)
-        print(f"Finished at {terminal_time()}")
+        self.logger.write("Finished at {terminal_time()}")
 
     def create_scores(self, threshold):
 
@@ -57,7 +58,8 @@ class CTScores:
             if len(snp_effects) > 0:
                 # Index the gen file with the snp names
                 indexes_snps = self.get_snp_indexes(snp_effects, gen_file)
-                print(f"Found {len(indexes_snps)} out of {len(snp_effects)} for chromosome {i} at {terminal_time()}")
+                self.logger.write(f"Found {len(indexes_snps)} out of {len(snp_effects)} for chromosome {i} at "
+                                  f"{terminal_time()}")
 
                 # Extract the dosage and then multiple those values by the coefficients, add it to score
                 gen_file = gen_file[:, [index for _, _, index in indexes_snps]]
@@ -66,14 +68,15 @@ class CTScores:
                 total += len(indexes_snps)
 
             else:
-                print(f"No snps for chromosome {i} valid at this threshold {threshold} at {terminal_time()}")
+                self.logger.write(f"No snps for chromosome {i} valid at this threshold {threshold} at "
+                                  f"{terminal_time()}")
 
         if sum(total_scores) != 0:
-            print(f"Finished threshold {threshold} with {total} snps at {terminal_time()}\n\n")
+            self.logger.write(f"Finished threshold {threshold} with {total} snps at {terminal_time()}\n\n")
             self._headers.append(str(threshold))
             self._out.append(total_scores.tolist())
         else:
-            print(f"Found No valid snps for threshold {threshold} at {terminal_time()}\n\n")
+            self.logger.write(f"Found No valid snps for threshold {threshold} at {terminal_time()}\n\n")
 
     def get_file_name(self, target):
         """
