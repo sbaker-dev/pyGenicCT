@@ -94,7 +94,7 @@ class CTScores:
                 if chromosome == target and ".bgen" in file:
                     return Path(self._root, file)
 
-            except TypeError:
+            except (TypeError, ValueError):
                 pass
 
     def chromosome_thresholds(self, threshold, i):
