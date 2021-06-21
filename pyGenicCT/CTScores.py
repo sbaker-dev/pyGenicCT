@@ -91,7 +91,7 @@ class CTScores:
         for file in directory_iterator(self._root):
             try:
                 chromosome = int(file.split(self._base_name)[1].split(".")[0])
-                if chromosome == target and ".bgen" in file:
+                if (chromosome == target) and (".bgen" in file) and (".bgi" not in file):
                     return Path(self._root, file)
 
             except (TypeError, ValueError):
