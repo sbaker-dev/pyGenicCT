@@ -47,6 +47,14 @@ class CTScores:
         self.logger.write("Finished at {terminal_time()}")
 
     def create_scores(self, threshold):
+        """
+        Create score from the sum of the dosage effect * snp beta
+
+        :param threshold: Which p value threshold to extract snps on
+        :type threshold: float
+
+        :return: Nothing, append snps tp pit then stop out then stop
+        """
 
         total_scores = np.zeros(len(self._iid))
         total = 0
@@ -131,10 +139,15 @@ class CTScores:
         :return: A list of Snp, effect, index
         :rtype: list[str, float, int]
         """
+
+        # Get {variant id: rs_id} for each snp, so we can reconstruct 'variant_id,rs_id' for py-snp-tools
+        v_dict = {snp[1]: snp[0] for snp in [snp.split(",") for snp in gen_file.sid]}
+
+        # Reconstruct 'variant_id,rs_id' and if it exists add to snp_indexes as [snp, (beta) effect, snp_index]
         snp_indexes = []
         for snp, effect in snp_effects:
             try:
-                snp_indexes.append([snp, effect, gen_file.sid_to_index([f"{snp},{snp}"]).tolist()[0]])
+                snp_indexes.append([snp, effect, gen_file.sid_to_index([f"{v_dict[snp]},{snp}"]).tolist()[0]])
             except KeyError:
                 pass
 
