@@ -52,7 +52,7 @@ class CTScores:
         # Merge the two, drop duplicate, column name, then write to file
         df = valid_snps.merge(data, left_on=self.args["valid_snp_name"], right_on=self.args["values_snp_name"])
         df = df.drop(columns=self.args["values_snp_name"])
-        df.to_csv(Path(self.args["write_directory"], "Snps.csv"), index=False)
+        df.to_csv(Path(self.args["write_path"], "Snps.csv"), index=False)
 
     def create_score_levels(self):
         """
