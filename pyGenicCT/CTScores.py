@@ -26,7 +26,6 @@ class CTScores:
         self._base_name = self.args["base_name"]
 
         # Load the valid snps from plink
-        self._valid_snps = CsvObject(self.args["snps_path"])
         self._iid = Bgen(self.get_file_name(1)).iid
 
         # Set the headers based on the iid fid combination
@@ -37,16 +36,26 @@ class CTScores:
         else:
             raise IndexError("Headers expect IID / FID")
 
+        # Setup a scores header as an attribute so we can call it rather than pass it back and forth via methods
+        self._scores_holder = []
+
+    def create_score_levels(self):
+        """
+        Create score from the sum of the dosage effect * snp beta for each p level threshold specified by the user
+
+        :return:
+        """
+
         # set the p value thresholds scores for each threshold
-        self._out = []
-        [self.create_scores(threshold) for threshold in self.args["threshold"][::-1]]
+        [self.create_score(threshold) for threshold in self.args["threshold"][::-1]]
 
         # Write the scores out
-        self._out = [list(iid) + values for iid, values in zip(self._iid, flip_list(self._out))]
-        write_csv(self.args["write_path"], self.args["write_name"], self._headers, self._out)
-        self.logger.write("Finished at {terminal_time()}")
+        self._scores_holder = [list(iid) + values for iid, values in zip(self._iid, flip_list(self._scores_holder))]
+        write_csv(self.args["write_path"], self.args["write_name"], self._headers, self._scores_holder)
+        self.logger.write(f"Finished at {terminal_time()}")
+        self._scores_holder = []
 
-    def create_scores(self, threshold):
+    def create_score(self, threshold):
         """
         Create score from the sum of the dosage effect * snp beta
 
@@ -82,7 +91,7 @@ class CTScores:
         if sum(total_scores) != 0:
             self.logger.write(f"Finished threshold {threshold} with {total} snps at {terminal_time()}\n\n")
             self._headers.append(str(threshold))
-            self._out.append(total_scores.tolist())
+            self._scores_holder.append(total_scores.tolist())
         else:
             self.logger.write(f"Found No valid snps for threshold {threshold} at {terminal_time()}\n\n")
 
@@ -118,8 +127,10 @@ class CTScores:
         :return: List of snp_name, coefficient value
         :rtype: list[str, float]
         """
+        valid_snps = CsvObject(Path(self.args["write_path"], "Snps.csv"))
+
         snp_effects = []
-        for row in self._valid_snps.row_data:
+        for row in valid_snps.row_data:
             if int(float(row[self._chr_index])) == i and (0 < float(row[self._p_v_index]) <= threshold):
                 snp_effects.append([row[self._snp_index], float(row[self._coe_index])])
 
