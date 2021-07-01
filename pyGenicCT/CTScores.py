@@ -39,6 +39,21 @@ class CTScores:
         # Setup a scores header as an attribute so we can call it rather than pass it back and forth via methods
         self._scores_holder = []
 
+    def link_resources(self):
+        """
+        Link the valid and the values files via pandas
+        """
+        # Load the valid snps
+        valid_snps = pd.read_csv(self.args["Valid"], sep=" ")
+
+        # Load the snp data
+        data = pd.read_csv(self.args["Values"], sep=" ")
+
+        # Merge the two, drop duplicate, column name, then write to file
+        df = valid_snps.merge(data, left_on=self.args["valid_snp_name"], right_on=self.args["values_snp_name"])
+        df = df.drop(columns=self.args["values_snp_name"])
+        df.to_csv(Path(self.args["write_directory"], "Snps.csv"), index=False)
+
     def create_score_levels(self):
         """
         Create score from the sum of the dosage effect * snp beta for each p level threshold specified by the user
@@ -168,22 +183,3 @@ class CTScores:
     def _extract_dosage(gen_file):
         """Extract the dosage"""
         return sum(np.array([snp * i for i, snp in enumerate(gen_file.read(dtype=np.int8).val.T)], dtype=np.int8))
-
-
-def link_resources(yaml_path):
-    """
-    Link the valid and the values files via pandas
-    """
-
-    args = load_yaml(yaml_path)
-
-    # Load the valid snps
-    valid_snps = pd.read_csv(args["Valid"], sep=" ")
-
-    # Load the snp data
-    data = pd.read_csv(args["Values"], sep=" ")
-
-    # Merge the two, drop duplicate, column name, then write to file
-    df = valid_snps.merge(data, left_on=args["valid_snp_name"], right_on=args["values_snp_name"])
-    df = df.drop(columns=args["values_snp_name"])
-    df.to_csv(Path(args["write_directory"], "Snps.csv"), index=False)
