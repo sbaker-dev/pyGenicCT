@@ -102,9 +102,14 @@ def extract_results(script_write_path, script_name, summary_name, clump_name, su
     # Setup the slurm submission script headers
     sbatch_headers(file, script_name, partition, nodes, task_per_node, cpus, time, memory)
 
+    file.write(f"gzip -d {summary_name}\n")
+    unzipped = summary_name.split(".gz")[0]
+
     # Extract the chromosome level snps
     file.write("awk '{print $%s,$%s}' %s > SNP.valid\n\n" % (clump_snp, clump_chromosome, clump_name))
-    file.write("awk '{print $%s,$%s,$%s}' %s > SNP.values\n" % (summary_snp, summary_effect, summary_p, summary_name))
+    file.write("awk '{print $%s,$%s,$%s}' %s > SNP.values\n" % (summary_snp, summary_effect, summary_p, unzipped))
+
+    file.write(f"gzip -d {unzipped}\n")
 
 
 # todo sbatch header for extract_snps
